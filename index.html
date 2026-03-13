@@ -274,7 +274,7 @@
 </div>
 
 <header>
-  <div class="logo"><span class="logo-dot"></span>eBillKaro</div>
+  <a href="https://www.ebillkaro.com" class="logo" style="text-decoration:none;color:inherit;"><span class="logo-dot"></span>eBillKaro</a>
   <div style="display:flex;align-items:center;gap:0.75rem;margin-left:auto;">
     <button class="btn btn-ghost" onclick="clearForm()">↺ Reset</button>
     <button class="btn btn-gold" onclick="downloadPDF()">⬇ Download PDF</button>
@@ -334,7 +334,7 @@
   <div class="auth-modal" style="max-width:640px;">
     <h2>Upgrade to Pro</h2>
     <p>Unlock all features and grow your business</p>
-    <div class="pricing-grid">
+    <div class="pricing-grid" style="grid-template-columns:repeat(4,1fr);">
       <div class="price-card">
         <h3>Free</h3>
         <div class="price-amount">$0</div>
@@ -348,7 +348,7 @@
         <button class="upgrade-btn outline" onclick="closeModal('pricingModal')">Current Plan</button>
       </div>
       <div class="price-card featured">
-        <h3>Pro</h3>
+        <h3>Pro Monthly</h3>
         <div class="price-amount">$7</div>
         <div class="period">/month</div>
         <ul class="price-features">
@@ -361,16 +361,28 @@
           <li>WhatsApp share</li>
           <li>Invoice stats</li>
         </ul>
-        <button class="upgrade-btn gold" onclick="alert('Payment integration coming soon!')">Upgrade Now</button>
+        <button class="upgrade-btn gold" onclick="alert('Payment coming soon!')">Get Monthly</button>
+      </div>
+      <div class="price-card featured">
+        <h3>Pro Yearly</h3>
+        <div class="price-amount">$70</div>
+        <div class="period">/year <span style="background:#eafaf1;color:var(--success);font-size:0.65rem;padding:0.15rem 0.4rem;border-radius:4px;font-weight:700;">2 months FREE</span></div>
+        <ul class="price-features">
+          <li>Everything in Monthly</li>
+          <li>Save $14 vs monthly</li>
+          <li>Priority support</li>
+        </ul>
+        <button class="upgrade-btn gold" onclick="alert('Payment coming soon!')">Get Yearly</button>
       </div>
       <div class="price-card">
         <h3>Lifetime</h3>
-        <div class="price-amount">$25</div>
+        <div class="price-amount">$149</div>
         <div class="period">one-time</div>
         <ul class="price-features">
           <li>Everything in Pro</li>
-          <li>Pay once forever</li>
-          <li>Future updates included</li>
+          <li>Pay once, use forever</li>
+          <li>All future updates</li>
+          <li>Best long-term value</li>
         </ul>
         <button class="upgrade-btn gold" onclick="alert('Coming soon!')">Get Lifetime</button>
       </div>
