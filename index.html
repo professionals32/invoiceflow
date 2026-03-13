@@ -659,12 +659,10 @@
 
     // Watermark
     doc.saveGraphicsState();
-    doc.setGState(new doc.GState({opacity: 0.045}));
-    doc.setTextColor(15,15,15); doc.setFontSize(28); doc.setFont('helvetica','bold');
-    for(let wy = 40; wy < 280; wy += 50) {
-      for(let wx = 10; wx < 210; wx += 90) {
-        doc.text('ebillkaro.com', wx, wy, {angle: 35});
-      }
+    doc.setGState(new doc.GState({opacity: 0.06}));
+    doc.setTextColor(150,145,140); doc.setFontSize(22); doc.setFont('helvetica','normal');
+    for(let wy = 60; wy < 270; wy += 70) {
+      doc.text('ebillkaro.com', W/2, wy, {angle: 30, align:'center'});
     }
     doc.restoreGraphicsState();
 
@@ -685,15 +683,17 @@
 
     let y = 55;
     doc.setTextColor(140,133,128); doc.setFontSize(7); doc.setFont('helvetica','bold');
-    doc.text('BILL TO', m, y); doc.text('STATUS', W-m-30, y);
+    doc.text('BILL TO', m, y); doc.text('STATUS', W-m-28, y);
     y += 5;
     doc.setTextColor(15,15,15); doc.setFontSize(10); doc.setFont('helvetica','bold');
     doc.text(v('toName')||'Client', m, y);
 
-    const sc = {draft:[200,193,182],sent:[41,128,185],paid:[39,174,96],overdue:[192,57,43]}[status];
-    doc.setFillColor(...sc); doc.roundedRect(W-m-22, y-4.5, 22, 6, 1.5, 1.5, 'F');
+    const sc = {draft:[180,175,168],sent:[41,128,185],paid:[39,174,96],overdue:[192,57,43]}[status];
+    const stLabel = status.toUpperCase();
+    const stW = Math.max(24, doc.getTextWidth(stLabel) + 8);
+    doc.setFillColor(...sc); doc.roundedRect(W-m-stW, y-4.5, stW, 6.5, 1.5, 1.5, 'F');
     doc.setTextColor(255,255,255); doc.setFontSize(6.5); doc.setFont('helvetica','bold');
-    doc.text(status.toUpperCase(), W-m-11, y-0.5, {align:'center'});
+    doc.text(stLabel, W-m-stW/2, y-0.3, {align:'center'});
 
     y += 5; doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(90,85,80);
     if(v('toAddress')){ doc.text(v('toAddress'), m, y); y+=4.5; }
