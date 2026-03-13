@@ -214,6 +214,53 @@
   .saved-invoice-item:hover { border-color: var(--gold); }
   .saved-inv-title { font-weight: 600; font-size: 0.9rem; }
   .saved-inv-meta { font-size: 0.75rem; color: var(--muted); margin-top: 0.15rem; }
+
+  /* Dark mode */
+  body.dark { --ink: #f0efe8; --paper: #141414; --cream: #1e1e1e; --line: #2a2a2a; --white: #1a1a1a; --muted: #7a7570; }
+  body.dark header { background: #0a0a0a; }
+  body.dark .invoice-preview { box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+  body.dark input, body.dark textarea, body.dark select { background: #1e1e1e; color: #f0efe8; border-color: #2a2a2a; }
+
+  /* Logo upload */
+  .logo-upload-area { border: 2px dashed var(--line); border-radius: 8px; padding: 1rem; text-align: center; cursor: pointer; transition: border-color 0.2s; position: relative; }
+  .logo-upload-area:hover { border-color: var(--gold); }
+  .logo-upload-area input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .logo-preview-img { max-height: 60px; max-width: 160px; object-fit: contain; display: none; }
+
+  /* Invoice template selector */
+  .template-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-top: 0.5rem; }
+  .template-card { border: 2px solid var(--line); border-radius: 8px; padding: 0.75rem; text-align: center; cursor: pointer; transition: all 0.15s; font-size: 0.8rem; }
+  .template-card:hover { border-color: var(--gold); }
+  .template-card.active { border-color: var(--gold); background: #fffdf5; }
+  .template-card .t-icon { font-size: 1.5rem; margin-bottom: 0.3rem; }
+  .template-card .t-name { font-weight: 600; font-size: 0.78rem; }
+  .template-card .t-desc { font-size: 0.68rem; color: var(--muted); margin-top: 0.15rem; }
+
+  /* Stats dashboard */
+  .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; padding: 1.25rem 2.5rem; background: var(--white); border-bottom: 1px solid var(--line); }
+  .stat-card { text-align: center; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--line); }
+  .stat-card .stat-val { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700; }
+  .stat-card .stat-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.2rem; }
+  .stat-card.total { border-color: var(--gold); }
+  .stat-card.paid { border-color: var(--success); }
+  .stat-card.overdue { border-color: var(--danger); }
+
+  /* PAID stamp on preview */
+  .paid-stamp { position: absolute; top: 40%; left: 50%; transform: translate(-50%,-50%) rotate(-25deg); border: 4px solid var(--success); color: var(--success); font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; padding: 0.3rem 1rem; border-radius: 6px; opacity: 0.35; pointer-events: none; white-space: nowrap; display: none; letter-spacing: 0.1em; }
+  .invoice-preview { position: relative; }
+
+  /* Due date warning */
+  .due-warning { background: #fdedec; color: var(--danger); border: 1px solid #f1948a; border-radius: 6px; padding: 0.5rem 0.85rem; font-size: 0.8rem; margin-top: 0.5rem; display: none; }
+
+  /* Client book modal */
+  .client-item { display: flex; justify-content: space-between; align-items: center; padding: 0.65rem 0.85rem; border: 1px solid var(--line); border-radius: 7px; margin-bottom: 0.5rem; cursor: pointer; transition: border-color 0.2s; }
+  .client-item:hover { border-color: var(--gold); }
+  .client-name { font-weight: 600; font-size: 0.88rem; }
+  .client-meta { font-size: 0.72rem; color: var(--muted); }
+
+  /* WhatsApp button */
+  .btn-whatsapp { background: #25D366; color: white; border: none; }
+  .btn-whatsapp:hover { background: #1da851; transform: translateY(-1px); }
 </style>
 </head>
 <body>
@@ -237,12 +284,21 @@
   <div class="header-actions hidden" id="userMenu">
     <button class="btn btn-ghost" onclick="clearForm()">↺ Reset</button>
     <button class="btn btn-ghost" onclick="loadInvoices()">📂 My Invoices</button>
+    <button class="btn btn-ghost" onclick="toggleDarkMode()" id="darkBtn" title="Toggle Dark Mode">🌙</button>
     <span class="plan-tag free" id="planTag">Free</span>
     <button class="btn btn-ghost" style="font-size:0.8rem;" onclick="showPricing()">⭐ Upgrade</button>
     <div class="user-avatar" id="userAvatar" onclick="signOut()" title="Click to Sign Out">?</div>
     <button class="btn btn-gold" onclick="downloadPDF()">⬇ Download PDF</button>
   </div>
 </header>
+
+<!-- Stats Bar (Pro) -->
+<div class="stats-bar pro-lock" id="statsBar" onclick="showPricing()">
+  <div class="stat-card total"><div class="stat-val" id="statTotal">$0</div><div class="stat-label">Total Invoiced</div></div>
+  <div class="stat-card paid"><div class="stat-val" id="statPaid">$0</div><div class="stat-label">Paid</div></div>
+  <div class="stat-card overdue"><div class="stat-val" id="statOverdue">$0</div><div class="stat-label">Overdue</div></div>
+  <div class="stat-card"><div class="stat-val" id="statCount">0</div><div class="stat-label">Total Invoices</div></div>
+</div>
 
 <!-- Auth Modal -->
 <div class="modal-overlay hidden" id="authModal">
@@ -331,6 +387,20 @@
   </div>
 </div>
 
+<!-- Client Book Modal -->
+<div class="modal-overlay hidden" id="clientModal">
+  <div class="auth-modal" style="max-width:480px;max-height:80vh;overflow-y:auto;">
+    <h2>Saved Clients</h2>
+    <p>Select a client to auto-fill their details</p>
+    <div id="clientList"></div>
+    <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--line);">
+      <div style="font-weight:600;font-size:0.9rem;margin-bottom:0.75rem;">Save Current Client</div>
+      <button class="auth-btn" onclick="saveCurrentClient()" style="background:var(--gold);color:var(--ink);">💾 Save This Client</button>
+    </div>
+    <div style="text-align:center;margin-top:1rem;"><a style="font-size:0.8rem;color:var(--muted);cursor:pointer;" onclick="closeModal('clientModal')">Close</a></div>
+  </div>
+</div>
+
 <div class="app-layout">
   <div class="form-panel">
 
@@ -343,22 +413,57 @@
         <div class="field"><label>Phone</label><input type="tel" id="fromPhone" placeholder="+1 555 000 0000" oninput="updatePreview()"></div>
         <div class="field span-2"><label>Tax / Registration Number <span style="color:var(--muted);font-weight:400;">(NTN / GST / VAT / EIN)</span></label><input type="text" id="fromTax" placeholder="e.g. NTN-1234567-8" oninput="updatePreview()"></div>
       </div>
+      <!-- Logo Upload (Pro) -->
+      <div style="margin-top:1.25rem;" class="pro-lock" onclick="showPricing()">
+        <label>Business Logo <span class="pro-badge">PRO</span></label>
+        <div class="logo-upload-area" style="margin-top:0.4rem;" onclick="event.stopPropagation()">
+          <input type="file" id="logoInput" accept="image/*" onchange="handleLogoUpload(this)" onclick="checkPro(event)">
+          <img id="logoPreview" class="logo-preview-img" alt="Logo">
+          <div id="logoPlaceholder">📷 Click to upload your logo</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Invoice Templates (Pro) -->
+    <div class="section pro-lock" onclick="showPricing()">
+      <div class="section-title"><span class="icon">🎨</span> Invoice Template <span class="pro-badge">PRO</span></div>
+      <div class="template-grid" onclick="event.stopPropagation()">
+        <div class="template-card active" onclick="setTemplate('classic',this)">
+          <div class="t-icon">📄</div>
+          <div class="t-name">Classic</div>
+          <div class="t-desc">Dark header, clean</div>
+        </div>
+        <div class="template-card" onclick="setTemplate('minimal',this)">
+          <div class="t-icon">⬜</div>
+          <div class="t-name">Minimal</div>
+          <div class="t-desc">Light & simple</div>
+        </div>
+        <div class="template-card" onclick="setTemplate('bold',this)">
+          <div class="t-icon">🟦</div>
+          <div class="t-name">Bold</div>
+          <div class="t-desc">Gold accent, strong</div>
+        </div>
+      </div>
     </div>
 
     <div class="section">
-      <div class="section-title"><span class="icon">👤</span> Bill To</div>
+      <div class="section-title" style="justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:0.5rem;"><span class="icon">👤</span> Bill To</div>
+        <button class="btn btn-outline" style="font-size:0.75rem;padding:0.3rem 0.7rem;" onclick="openClientBook()">📋 Saved Clients <span class="pro-badge">PRO</span></button>
+      </div>
       <div class="form-grid">
         <div class="field span-2"><label>Client Name</label><input type="text" id="toName" placeholder="Client Company Ltd." oninput="updatePreview()"></div>
         <div class="field span-2"><label>Client Address</label><input type="text" id="toAddress" placeholder="456 Client Ave, City, Country" oninput="updatePreview()"></div>
         <div class="field"><label>Client Email</label><input type="email" id="toEmail" placeholder="client@company.com" oninput="updatePreview()"></div>
         <div class="field"><label>Client Phone</label><input type="tel" id="toPhone" placeholder="+1 555 111 2222" oninput="updatePreview()"></div>
       </div>
+      <div class="due-warning" id="dueWarning">⚠️ This invoice is overdue!</div>
     </div>
 
     <div class="section">
       <div class="section-title"><span class="icon">📄</span> Invoice Details</div>
       <div class="form-grid cols-3">
-        <div class="field"><label>Invoice #</label><input type="text" id="invNumber" placeholder="INV-001" oninput="updatePreview()"></div>
+        <div class="field"><label>Invoice # <button onclick="autoIncrementInvNum()" style="background:none;border:none;cursor:pointer;font-size:0.7rem;color:var(--gold);font-weight:600;padding:0;margin-left:0.3rem;" title="Auto increment">+1 <span class="pro-badge" style="font-size:0.55rem;">PRO</span></button></label><input type="text" id="invNumber" placeholder="INV-001" oninput="updatePreview()"></div>
         <div class="field"><label>Issue Date</label><input type="date" id="invDate" oninput="updatePreview()"></div>
         <div class="field"><label>Due Date</label><input type="date" id="dueDate" oninput="updatePreview()"></div>
       </div>
@@ -486,6 +591,7 @@
           <div style="font-size:0.68rem;color:#555;line-height:1.5;" id="prev-notes"></div>
         </div>
       </div>
+      <div class="paid-stamp" id="paidStamp">PAID</div>
       <div class="inv-footer">
         <span id="prev-terms">Thank you for your business</span>
         <span style="color:var(--gold);font-weight:600;">eBillKaro</span>
@@ -494,6 +600,7 @@
     <div class="preview-actions">
       <button class="btn btn-gold" onclick="downloadPDF()">⬇ Download PDF</button>
       <button class="btn btn-outline" onclick="window.print()">🖨 Print</button>
+      <button class="btn btn-whatsapp" onclick="shareWhatsApp()">📱 Share on WhatsApp <span class="pro-badge" style="background:rgba(255,255,255,0.3);color:white;">PRO</span></button>
     </div>
   </div>
 </div>
@@ -912,6 +1019,198 @@
     renderItems(); updatePreview();
     closeModal('invoicesModal');
   }
+</script>
+
+<script>
+  // ─── Phase 2: Pro Features ───
+  let logoDataUrl = null;
+  let invoiceTemplate = 'classic';
+  let darkMode = false;
+
+  function isPro() { return userPlan === 'pro'; }
+
+  function checkPro(e) {
+    if (!isPro()) { e.preventDefault(); e.stopPropagation(); showPricing(); }
+  }
+
+  // ─── Dark Mode ───
+  function toggleDarkMode() {
+    if (!isPro()) { showPricing(); return; }
+    darkMode = !darkMode;
+    document.body.classList.toggle('dark', darkMode);
+    document.getElementById('darkBtn').textContent = darkMode ? '☀️' : '🌙';
+  }
+
+  // ─── Logo Upload ───
+  function handleLogoUpload(input) {
+    if (!isPro()) { showPricing(); input.value = ''; return; }
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      logoDataUrl = e.target.result;
+      const img = document.getElementById('logoPreview');
+      img.src = logoDataUrl;
+      img.style.display = 'block';
+      document.getElementById('logoPlaceholder').style.display = 'none';
+      updatePreview();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // ─── Templates ───
+  function setTemplate(name, el) {
+    if (!isPro()) { showPricing(); return; }
+    invoiceTemplate = name;
+    document.querySelectorAll('.template-card').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    updatePreview();
+  }
+
+  // ─── Auto Invoice Number ───
+  function autoIncrementInvNum() {
+    if (!isPro()) { showPricing(); return; }
+    const current = document.getElementById('invNumber').value || 'INV-000';
+    const match = current.match(/^(.*?)(\d+)$/);
+    if (match) {
+      const num = parseInt(match[2]) + 1;
+      const padded = String(num).padStart(match[2].length, '0');
+      document.getElementById('invNumber').value = match[1] + padded;
+      updatePreview();
+    }
+  }
+
+  // ─── Due Date Warning ───
+  function checkDueDate() {
+    const dueVal = document.getElementById('dueDate').value;
+    const warningEl = document.getElementById('dueWarning');
+    if (!dueVal || !isPro()) { warningEl.style.display = 'none'; return; }
+    const due = new Date(dueVal);
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    if (due < today && status !== 'paid') {
+      warningEl.style.display = 'block';
+      warningEl.textContent = '⚠️ This invoice is overdue by ' + Math.floor((today-due)/(1000*60*60*24)) + ' day(s)!';
+    } else {
+      warningEl.style.display = 'none';
+    }
+  }
+
+  // ─── PAID Stamp ───
+  function updatePaidStamp() {
+    const stamp = document.getElementById('paidStamp');
+    if (isPro() && status === 'paid') {
+      stamp.style.display = 'block';
+    } else {
+      stamp.style.display = 'none';
+    }
+  }
+
+  // ─── WhatsApp Share ───
+  function shareWhatsApp() {
+    if (!isPro()) { showPricing(); return; }
+    const v = id => document.getElementById(id).value;
+    const t = calcTotals();
+    const msg = `*Invoice ${v('invNumber')||'INV-001'}*
+` +
+      `From: ${v('fromName')||'Your Business'}
+` +
+      `To: ${v('toName')||'Client'}
+` +
+      `Amount: ${fmt(t.grand)}
+` +
+      `Due: ${v('dueDate')||'—'}
+
+` +
+      `Generated via ebillkaro.com`;
+    window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+  }
+
+  // ─── Client Book ───
+  function openClientBook() {
+    if (!isPro()) { showPricing(); return; }
+    if (!currentUser) { showAuth('login'); return; }
+    loadClients();
+    document.getElementById('clientModal').classList.remove('hidden');
+  }
+
+  async function loadClients() {
+    const { data } = await sb.from('clients').select('*').eq('user_id', currentUser.id).order('name');
+    const listEl = document.getElementById('clientList');
+    if (!data || data.length === 0) {
+      listEl.innerHTML = '<p style="color:var(--muted);font-size:0.85rem;text-align:center;padding:1rem;">No saved clients yet. Fill in a client below and click Save.</p>';
+      return;
+    }
+    listEl.innerHTML = data.map(c => `
+      <div class="client-item" onclick="fillClient(${JSON.stringify(c).replace(/"/g,'&quot;')})">
+        <div>
+          <div class="client-name">${c.name}</div>
+          <div class="client-meta">${[c.email, c.phone].filter(Boolean).join(' • ')}</div>
+        </div>
+        <button class="btn btn-danger" onclick="deleteClient(event,'${c.id}')">✕</button>
+      </div>`).join('');
+  }
+
+  function fillClient(c) {
+    document.getElementById('toName').value = c.name || '';
+    document.getElementById('toAddress').value = c.address || '';
+    document.getElementById('toEmail').value = c.email || '';
+    document.getElementById('toPhone').value = c.phone || '';
+    updatePreview();
+    closeModal('clientModal');
+  }
+
+  async function saveCurrentClient() {
+    if (!currentUser) { showAuth('login'); return; }
+    const name = document.getElementById('toName').value;
+    if (!name) { alert('Please fill in client name first.'); return; }
+    const { error } = await sb.from('clients').insert([{
+      user_id: currentUser.id,
+      name, 
+      address: document.getElementById('toAddress').value,
+      email: document.getElementById('toEmail').value,
+      phone: document.getElementById('toPhone').value
+    }]);
+    if (error) alert('Error: ' + error.message);
+    else { alert('Client saved!'); loadClients(); }
+  }
+
+  async function deleteClient(e, id) {
+    e.stopPropagation();
+    if (!confirm('Delete this client?')) return;
+    await sb.from('clients').delete().eq('id', id);
+    loadClients();
+  }
+
+  // ─── Stats Dashboard ───
+  async function loadStats() {
+    if (!isPro() || !currentUser) return;
+    const statsBar = document.getElementById('statsBar');
+    statsBar.classList.add('unlocked');
+    const { data } = await sb.from('invoices').select('total,status').eq('user_id', currentUser.id);
+    if (!data) return;
+    const total = data.reduce((s,i) => s + (i.total||0), 0);
+    const paid = data.filter(i=>i.status==='paid').reduce((s,i) => s + (i.total||0), 0);
+    const overdue = data.filter(i=>i.status==='overdue').reduce((s,i) => s + (i.total||0), 0);
+    document.getElementById('statTotal').textContent = '$' + total.toFixed(0);
+    document.getElementById('statPaid').textContent = '$' + paid.toFixed(0);
+    document.getElementById('statOverdue').textContent = '$' + overdue.toFixed(0);
+    document.getElementById('statCount').textContent = data.length;
+  }
+
+  // ─── Override setStatus to trigger stamp + warning ───
+  const _origSetStatus = setStatus;
+  function setStatus(s, el) {
+    _origSetStatus(s, el);
+    updatePaidStamp();
+    checkDueDate();
+  }
+
+  // Hook into dueDate changes
+  document.addEventListener('DOMContentLoaded', () => {
+    const dueDateEl = document.getElementById('dueDate');
+    if (dueDateEl) dueDateEl.addEventListener('change', checkDueDate);
+  });
 </script>
 </body>
 </html>
