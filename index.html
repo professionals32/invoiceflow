@@ -6,6 +6,7 @@
 <title>eBillKaro — Professional Invoice Generator</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
     --ink: #0f0f0f;
@@ -167,6 +168,52 @@
   }
   @keyframes expandLine { from{width:0;opacity:0} to{width:60px;opacity:1} }
   @keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+  /* Auth Modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 1000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
+  .modal-overlay.hidden { display: none; }
+  .auth-modal { background: var(--white); border-radius: 14px; padding: 2.5rem; width: 100%; max-width: 420px; box-shadow: 0 24px 64px rgba(0,0,0,0.18); }
+  .auth-modal h2 { font-family: 'Playfair Display', serif; font-size: 1.6rem; margin-bottom: 0.3rem; }
+  .auth-modal p { color: var(--muted); font-size: 0.875rem; margin-bottom: 1.75rem; }
+  .auth-field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 1rem; }
+  .auth-field label { font-size: 0.75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .auth-btn { width: 100%; padding: 0.75rem; background: var(--ink); color: white; border: none; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 600; cursor: pointer; margin-top: 0.5rem; transition: background 0.2s; }
+  .auth-btn:hover { background: #333; }
+  .auth-switch { text-align: center; margin-top: 1.25rem; font-size: 0.875rem; color: var(--muted); }
+  .auth-switch a { color: var(--gold); cursor: pointer; font-weight: 600; text-decoration: none; }
+  .auth-error { background: #fdf2f2; color: var(--danger); border-radius: 6px; padding: 0.6rem 0.85rem; font-size: 0.85rem; margin-bottom: 1rem; display: none; }
+  .auth-success { background: #eafaf1; color: var(--success); border-radius: 6px; padding: 0.6rem 0.85rem; font-size: 0.85rem; margin-bottom: 1rem; display: none; }
+
+  /* Pro badge & lock */
+  .pro-badge { background: var(--gold); color: var(--ink); font-size: 0.6rem; font-weight: 700; padding: 0.15rem 0.45rem; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; margin-left: 0.4rem; vertical-align: middle; }
+  .pro-lock { position: relative; }
+  .pro-lock::after { content: '🔒 Pro Feature — Click to Upgrade'; position: absolute; inset: 0; background: rgba(250,249,247,0.93); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; color: var(--muted); font-weight: 500; z-index: 10; cursor: pointer; }
+  .pro-lock.unlocked::after { display: none; }
+
+  /* User menu */
+  .user-avatar { width: 32px; height: 32px; background: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; color: var(--ink); cursor: pointer; }
+  .plan-tag { font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 10px; font-weight: 600; }
+  .plan-tag.free { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); }
+  .plan-tag.pro { background: var(--gold); color: var(--ink); }
+
+  /* Pricing modal */
+  .pricing-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin: 1.5rem 0; }
+  .price-card { border: 1.5px solid var(--line); border-radius: 10px; padding: 1.25rem; text-align: center; }
+  .price-card.featured { border-color: var(--gold); background: #fffdf5; }
+  .price-card h3 { font-family: 'Playfair Display', serif; font-size: 1rem; margin-bottom: 0.5rem; }
+  .price-card .price-amount { font-size: 1.8rem; font-weight: 700; color: var(--ink); }
+  .price-card .period { font-size: 0.75rem; color: var(--muted); }
+  .price-card .price-features { list-style: none; margin: 1rem 0; text-align: left; font-size: 0.8rem; display: flex; flex-direction: column; gap: 0.4rem; }
+  .price-card .price-features li::before { content: '✓ '; color: var(--success); font-weight: 700; }
+  .upgrade-btn { width: 100%; padding: 0.6rem; border-radius: 6px; border: none; font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 0.85rem; cursor: pointer; margin-top: 0.5rem; }
+  .upgrade-btn.gold { background: var(--gold); color: var(--ink); }
+  .upgrade-btn.outline { background: transparent; border: 1.5px solid var(--line); color: var(--ink); }
+
+  /* Saved invoices */
+  .saved-invoice-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; border: 1px solid var(--line); border-radius: 8px; margin-bottom: 0.6rem; cursor: pointer; transition: border-color 0.2s; }
+  .saved-invoice-item:hover { border-color: var(--gold); }
+  .saved-inv-title { font-weight: 600; font-size: 0.9rem; }
+  .saved-inv-meta { font-size: 0.75rem; color: var(--muted); margin-top: 0.15rem; }
 </style>
 </head>
 <body>
@@ -181,11 +228,108 @@
 
 <header>
   <div class="logo"><span class="logo-dot"></span>eBillKaro</div>
-  <div class="header-actions">
+  <div class="header-actions" id="headerActions">
     <button class="btn btn-ghost" onclick="clearForm()">↺ Reset</button>
+    <button class="btn btn-ghost" id="btnLogin" onclick="showAuth('login')">Login</button>
+    <button class="btn btn-gold" id="btnSignup" onclick="showAuth('signup')">Sign Up Free</button>
+    <button class="btn btn-gold" onclick="downloadPDF()">⬇ Download PDF</button>
+  </div>
+  <div class="header-actions hidden" id="userMenu">
+    <button class="btn btn-ghost" onclick="clearForm()">↺ Reset</button>
+    <button class="btn btn-ghost" onclick="loadInvoices()">📂 My Invoices</button>
+    <span class="plan-tag free" id="planTag">Free</span>
+    <button class="btn btn-ghost" style="font-size:0.8rem;" onclick="showPricing()">⭐ Upgrade</button>
+    <div class="user-avatar" id="userAvatar" onclick="signOut()" title="Click to Sign Out">?</div>
     <button class="btn btn-gold" onclick="downloadPDF()">⬇ Download PDF</button>
   </div>
 </header>
+
+<!-- Auth Modal -->
+<div class="modal-overlay hidden" id="authModal">
+  <div class="auth-modal">
+    <div id="loginForm">
+      <h2>Welcome back</h2>
+      <p>Sign in to access your saved invoices</p>
+      <div class="auth-error" id="loginError"></div>
+      <div class="auth-success" id="loginSuccess"></div>
+      <div class="auth-field"><label>Email</label><input type="email" id="loginEmail" placeholder="you@example.com"></div>
+      <div class="auth-field"><label>Password</label><input type="password" id="loginPassword" placeholder="••••••••"></div>
+      <button class="auth-btn" onclick="doLogin()">Sign In</button>
+      <div class="auth-switch">No account? <a onclick="toggleAuthForm('signup')">Sign up free</a></div>
+    </div>
+    <div id="signupForm" style="display:none;">
+      <h2>Create account</h2>
+      <p>Start generating professional invoices for free</p>
+      <div class="auth-error" id="signupError"></div>
+      <div class="auth-success" id="signupSuccess"></div>
+      <div class="auth-field"><label>Email</label><input type="email" id="signupEmail" placeholder="you@example.com"></div>
+      <div class="auth-field"><label>Password</label><input type="password" id="signupPassword" placeholder="Min 6 characters"></div>
+      <button class="auth-btn" onclick="doSignup()">Create Free Account</button>
+      <div class="auth-switch">Already have an account? <a onclick="toggleAuthForm('login')">Sign in</a></div>
+    </div>
+    <div style="text-align:center;margin-top:1rem;"><a style="font-size:0.8rem;color:var(--muted);cursor:pointer;" onclick="closeModal('authModal')">Close</a></div>
+  </div>
+</div>
+
+<!-- Pricing Modal -->
+<div class="modal-overlay hidden" id="pricingModal">
+  <div class="auth-modal" style="max-width:640px;">
+    <h2>Upgrade to Pro</h2>
+    <p>Unlock all features and grow your business</p>
+    <div class="pricing-grid">
+      <div class="price-card">
+        <h3>Free</h3>
+        <div class="price-amount">$0</div>
+        <div class="period">forever</div>
+        <ul class="price-features">
+          <li>5 invoices/month</li>
+          <li>Basic currencies</li>
+          <li>PDF download</li>
+          <li>eBillKaro watermark</li>
+        </ul>
+        <button class="upgrade-btn outline" onclick="closeModal('pricingModal')">Current Plan</button>
+      </div>
+      <div class="price-card featured">
+        <h3>Pro</h3>
+        <div class="price-amount">$7</div>
+        <div class="period">/month</div>
+        <ul class="price-features">
+          <li>Unlimited invoices</li>
+          <li>Logo upload</li>
+          <li>3 invoice templates</li>
+          <li>Save clients</li>
+          <li>PAID stamp</li>
+          <li>No watermark</li>
+          <li>WhatsApp share</li>
+          <li>Invoice stats</li>
+        </ul>
+        <button class="upgrade-btn gold" onclick="alert('Payment integration coming soon!')">Upgrade Now</button>
+      </div>
+      <div class="price-card">
+        <h3>Lifetime</h3>
+        <div class="price-amount">$25</div>
+        <div class="period">one-time</div>
+        <ul class="price-features">
+          <li>Everything in Pro</li>
+          <li>Pay once forever</li>
+          <li>Future updates included</li>
+        </ul>
+        <button class="upgrade-btn gold" onclick="alert('Coming soon!')">Get Lifetime</button>
+      </div>
+    </div>
+    <div style="text-align:center;"><a style="font-size:0.8rem;color:var(--muted);cursor:pointer;" onclick="closeModal('pricingModal')">Close</a></div>
+  </div>
+</div>
+
+<!-- Saved Invoices Modal -->
+<div class="modal-overlay hidden" id="invoicesModal">
+  <div class="auth-modal" style="max-width:500px;max-height:80vh;overflow-y:auto;">
+    <h2>My Invoices</h2>
+    <p>Click an invoice to load it</p>
+    <div id="savedInvoicesList"></div>
+    <div style="text-align:center;margin-top:1rem;"><a style="font-size:0.8rem;color:var(--muted);cursor:pointer;" onclick="closeModal('invoicesModal')">Close</a></div>
+  </div>
+</div>
 
 <div class="app-layout">
   <div class="form-panel">
@@ -197,6 +341,7 @@
         <div class="field span-2"><label>Address</label><input type="text" id="fromAddress" placeholder="123 Main Street, City, Country" oninput="updatePreview()"></div>
         <div class="field"><label>Email</label><input type="email" id="fromEmail" placeholder="hello@acmestudio.com" oninput="updatePreview()"></div>
         <div class="field"><label>Phone</label><input type="tel" id="fromPhone" placeholder="+1 555 000 0000" oninput="updatePreview()"></div>
+        <div class="field span-2"><label>Tax / Registration Number <span style="color:var(--muted);font-weight:400;">(NTN / GST / VAT / EIN)</span></label><input type="text" id="fromTax" placeholder="e.g. NTN-1234567-8" oninput="updatePreview()"></div>
       </div>
     </div>
 
@@ -277,6 +422,16 @@
       <div class="form-grid cols-1">
         <div class="field"><label>Notes to Client</label><textarea id="notes" placeholder="Thank you for your business! Payment is due within the specified period." oninput="updatePreview()"></textarea></div>
         <div class="field"><label>Payment Terms</label><input type="text" id="terms" placeholder="Bank transfer to: Account # 1234567890, Bank Name" oninput="updatePreview()"></div>
+      </div>
+    </div>
+
+    <div class="section" style="background:var(--cream);border-color:var(--gold);">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-weight:600;font-size:0.95rem;">💾 Save Invoice</div>
+          <div style="font-size:0.8rem;color:var(--muted);margin-top:0.2rem;">Login to save and access invoices anywhere</div>
+        </div>
+        <button class="btn btn-gold" onclick="saveInvoice()" id="btnSave">Save Invoice</button>
       </div>
     </div>
 
@@ -579,6 +734,166 @@
     doc.text('eBillKaro', W-m, 292, {align:'right'});
 
     doc.save(`Invoice_${v('invNumber')||'INV-001'}.pdf`);
+  }
+</script>
+
+<script>
+  // ─── Supabase Setup ───
+  const SUPABASE_URL = 'https://anbohifsrpqwxxkttpla.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFuYm9oaWZzcnBxd3h4a3R0cGxhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0MTY3NzQsImV4cCI6MjA4ODk5Mjc3NH0.R9xVsKTfxYYu_T5ZnaxdLay-cCAdqxgW86BMzg2c9Ik';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let currentUser = null;
+  let userPlan = 'free';
+
+  // ─── Auth State ───
+  sb.auth.onAuthStateChange((event, session) => {
+    currentUser = session?.user || null;
+    updateHeaderUI();
+  });
+
+  async function updateHeaderUI() {
+    const guestActions = document.getElementById('headerActions');
+    const userMenuEl = document.getElementById('userMenu');
+    if (currentUser) {
+      guestActions.classList.add('hidden');
+      userMenuEl.classList.remove('hidden');
+      const email = currentUser.email || '';
+      document.getElementById('userAvatar').textContent = email[0].toUpperCase();
+      document.getElementById('planTag').textContent = userPlan === 'pro' ? 'Pro ⭐' : 'Free';
+      document.getElementById('planTag').className = 'plan-tag ' + userPlan;
+    } else {
+      guestActions.classList.remove('hidden');
+      userMenuEl.classList.add('hidden');
+    }
+  }
+
+  // ─── Auth Functions ───
+  function showAuth(mode) {
+    document.getElementById('authModal').classList.remove('hidden');
+    toggleAuthForm(mode);
+  }
+
+  function toggleAuthForm(mode) {
+    document.getElementById('loginForm').style.display = mode === 'login' ? 'block' : 'none';
+    document.getElementById('signupForm').style.display = mode === 'signup' ? 'block' : 'none';
+  }
+
+  function closeModal(id) {
+    document.getElementById(id).classList.add('hidden');
+  }
+
+  function showPricing() {
+    document.getElementById('pricingModal').classList.remove('hidden');
+  }
+
+  async function doLogin() {
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    const errEl = document.getElementById('loginError');
+    errEl.style.display = 'none';
+    if (!email || !password) { errEl.textContent = 'Please fill in all fields.'; errEl.style.display = 'block'; return; }
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; }
+    else { closeModal('authModal'); }
+  }
+
+  async function doSignup() {
+    const email = document.getElementById('signupEmail').value;
+    const password = document.getElementById('signupPassword').value;
+    const errEl = document.getElementById('signupError');
+    const sucEl = document.getElementById('signupSuccess');
+    errEl.style.display = 'none'; sucEl.style.display = 'none';
+    if (!email || !password) { errEl.textContent = 'Please fill in all fields.'; errEl.style.display = 'block'; return; }
+    if (password.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; errEl.style.display = 'block'; return; }
+    const { error } = await sb.auth.signUp({ email, password });
+    if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; }
+    else { sucEl.textContent = 'Account created! Please check your email to confirm, then log in.'; sucEl.style.display = 'block'; }
+  }
+
+  async function signOut() {
+    if (!confirm('Sign out?')) return;
+    await sb.auth.signOut();
+  }
+
+  // ─── Save Invoice ───
+  async function saveInvoice() {
+    if (!currentUser) { showAuth('login'); return; }
+    const v = id => document.getElementById(id).value;
+    const invoiceData = {
+      user_id: currentUser.id,
+      invoice_number: v('invNumber') || 'INV-001',
+      from_name: v('fromName'),
+      from_address: v('fromAddress'),
+      from_email: v('fromEmail'),
+      from_phone: v('fromPhone'),
+      from_tax: v('fromTax'),
+      to_name: v('toName'),
+      to_address: v('toAddress'),
+      to_email: v('toEmail'),
+      to_phone: v('toPhone'),
+      issue_date: v('invDate'),
+      due_date: v('dueDate'),
+      currency_code: currency.code,
+      currency_symbol: currency.symbol,
+      tax_rate: parseFloat(v('taxRate')) || 0,
+      discount_rate: parseFloat(v('discountRate')) || 0,
+      notes: v('notes'),
+      terms: v('terms'),
+      status: status,
+      items: JSON.stringify(items),
+      total: calcTotals().grand
+    };
+    const { error } = await sb.from('invoices').insert([invoiceData]);
+    if (error) {
+      if (error.message.includes('relation') || error.message.includes('does not exist')) {
+        alert('Database table not set up yet. Please follow the setup instructions.');
+      } else {
+        alert('Error saving: ' + error.message);
+      }
+    } else {
+      alert('Invoice saved successfully!');
+    }
+  }
+
+  // ─── Load Invoices ───
+  async function loadInvoices() {
+    if (!currentUser) { showAuth('login'); return; }
+    const { data, error } = await sb.from('invoices').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+    const listEl = document.getElementById('savedInvoicesList');
+    if (error || !data || data.length === 0) {
+      listEl.innerHTML = '<p style="color:var(--muted);text-align:center;padding:1rem;">No saved invoices yet.</p>';
+    } else {
+      listEl.innerHTML = data.map(inv => `
+        <div class="saved-invoice-item" onclick="loadInvoiceData(${JSON.stringify(inv).replace(/"/g,'&quot;')})">
+          <div>
+            <div class="saved-inv-title">${inv.invoice_number} — ${inv.to_name || 'No client'}</div>
+            <div class="saved-inv-meta">${inv.from_name || ''} · ${inv.currency_symbol}${parseFloat(inv.total||0).toFixed(2)} · ${inv.status}</div>
+          </div>
+          <span class="inv-status-tag ${inv.status}">${inv.status.toUpperCase()}</span>
+        </div>
+      `).join('');
+    }
+    document.getElementById('invoicesModal').classList.remove('hidden');
+  }
+
+  function loadInvoiceData(inv) {
+    const set = (id, val) => { const el = document.getElementById(id); if(el) el.value = val || ''; };
+    set('fromName', inv.from_name); set('fromAddress', inv.from_address);
+    set('fromEmail', inv.from_email); set('fromPhone', inv.from_phone);
+    set('fromTax', inv.from_tax);
+    set('toName', inv.to_name); set('toAddress', inv.to_address);
+    set('toEmail', inv.to_email); set('toPhone', inv.to_phone);
+    set('invNumber', inv.invoice_number); set('invDate', inv.issue_date);
+    set('dueDate', inv.due_date); set('taxRate', inv.tax_rate);
+    set('discountRate', inv.discount_rate); set('notes', inv.notes); set('terms', inv.terms);
+    currency = { code: inv.currency_code, symbol: inv.currency_symbol };
+    status = inv.status;
+    items = JSON.parse(inv.items || '[]');
+    document.querySelectorAll('.currency-opt').forEach(e => { if(e.textContent.includes(inv.currency_code)) e.classList.add('active'); else e.classList.remove('active'); });
+    document.querySelectorAll('.status-badge').forEach(e => { e.classList.toggle('active', e.classList.contains(inv.status)); });
+    renderItems(); updatePreview();
+    closeModal('invoicesModal');
   }
 </script>
 </body>
