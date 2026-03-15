@@ -937,7 +937,7 @@
     if (!email || !password) { errEl.textContent = 'Please fill in all fields.'; errEl.style.display = 'block'; return; }
     const { error } = await sb.auth.signInWithPassword({ email, password });
     if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; }
-    else { closeModal('authModal'); }
+    else { closeModal('authModal'); window.location.reload(); }
   }
 
   async function doSignup() {
@@ -956,6 +956,7 @@
   async function signOut() {
     if (!confirm('Sign out?')) return;
     await sb.auth.signOut();
+    window.location.reload();
   }
 
   // ─── Save Invoice ───
