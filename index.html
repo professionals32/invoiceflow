@@ -361,7 +361,7 @@
           <li>WhatsApp share</li>
           <li>Invoice stats</li>
         </ul>
-        <button class="upgrade-btn gold" onclick="alert('Payment coming soon!')">Get Monthly</button>
+        <button class="upgrade-btn gold" onclick="openCheckout('https://ebillkaropro.lemonsqueezy.com/checkout/buy/c71e90fd-7b23-4d06-9f07-fd5c36af3621')">Get Monthly</button>
       </div>
       <div class="price-card featured">
         <h3>Pro Yearly</h3>
@@ -372,7 +372,7 @@
           <li>Save $14 vs monthly</li>
           <li>Priority support</li>
         </ul>
-        <button class="upgrade-btn gold" onclick="alert('Payment coming soon!')">Get Yearly</button>
+        <button class="upgrade-btn gold" onclick="openCheckout('https://ebillkaropro.lemonsqueezy.com/checkout/buy/bb2a00e7-a9fb-4222-8d2c-04fa00d96877')">Get Yearly</button>
       </div>
       <div class="price-card">
         <h3>Lifetime</h3>
@@ -384,7 +384,7 @@
           <li>All future updates</li>
           <li>Best long-term value</li>
         </ul>
-        <button class="upgrade-btn gold" onclick="alert('Coming soon!')">Get Lifetime</button>
+        <button class="upgrade-btn gold" onclick="openCheckout('https://ebillkaropro.lemonsqueezy.com/checkout/buy/3e4ab069-a73b-4bda-9219-7f37fe765b93')">Get Lifetime</button>
       </div>
     </div>
     <div style="text-align:center;"><a style="font-size:0.8rem;color:var(--muted);cursor:pointer;" onclick="closeModal('pricingModal')">Close</a></div>
@@ -885,8 +885,19 @@
   let userPlan = 'free';
 
   // ─── Auth State ───
-  sb.auth.onAuthStateChange((event, session) => {
+  sb.auth.onAuthStateChange(async (event, session) => {
     currentUser = session?.user || null;
+    if (currentUser) {
+      const { data } = await sb.from('profiles').select('plan').eq('user_id', currentUser.id).single();
+      userPlan = data?.plan || 'free';
+      if (userPlan === 'pro') {
+        document.querySelectorAll('.pro-lock').forEach(el => el.classList.add('unlocked'));
+        loadStats();
+      }
+    } else {
+      userPlan = 'free';
+      document.querySelectorAll('.pro-lock').forEach(el => el.classList.remove('unlocked'));
+    }
     updateHeaderUI();
   });
 
@@ -1033,6 +1044,39 @@
     renderItems(); updatePreview();
     closeModal('invoicesModal');
   }
+</script>
+
+<script src="https://app.lemonsqueezy.com/js/lemon.js" defer></script>
+<script>
+  // ─── Phase 3: Payments ───
+  function openCheckout(url) {
+    // Pass user email if logged in for pre-filling checkout
+    let checkoutUrl = url;
+    if (currentUser && currentUser.email) {
+      checkoutUrl += '?checkout[email]=' + encodeURIComponent(currentUser.email);
+    }
+    LemonSqueezy.Url.Open(checkoutUrl);
+  }
+
+  // Listen for successful payment from Lemon Squeezy
+  window.addEventListener('message', async (e) => {
+    if (e.data && e.data.event === 'Checkout.Success') {
+      // Mark user as pro in Supabase
+      if (currentUser) {
+        await sb.from('profiles').upsert({
+          user_id: currentUser.id,
+          plan: 'pro',
+          updated_at: new Date().toISOString()
+        });
+        userPlan = 'pro';
+        updateHeaderUI();
+        document.querySelectorAll('.pro-lock').forEach(el => el.classList.add('unlocked'));
+        loadStats();
+        alert('🎉 Welcome to eBillKaro Pro! All features are now unlocked.');
+      }
+      closeModal('pricingModal');
+    }
+  });
 </script>
 
 <script>
