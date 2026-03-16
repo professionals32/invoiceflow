@@ -961,11 +961,28 @@
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
     const errEl = document.getElementById('loginError');
+    const btn = document.querySelector('#loginForm .auth-btn');
     errEl.style.display = 'none';
     if (!email || !password) { errEl.textContent = 'Please fill in all fields.'; errEl.style.display = 'block'; return; }
-    const { error } = await sb.auth.signInWithPassword({ email, password });
-    if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; }
-    else { closeModal('authModal'); window.location.reload(); }
+    btn.textContent = 'Signing in...';
+    btn.disabled = true;
+    try {
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) {
+        errEl.textContent = error.message;
+        errEl.style.display = 'block';
+        btn.textContent = 'Sign In';
+        btn.disabled = false;
+      } else {
+        btn.textContent = 'Success! Redirecting...';
+        setTimeout(() => { closeModal('authModal'); window.location.reload(); }, 800);
+      }
+    } catch(e) {
+      errEl.textContent = 'Something went wrong: ' + e.message;
+      errEl.style.display = 'block';
+      btn.textContent = 'Sign In';
+      btn.disabled = false;
+    }
   }
 
   async function doSignup() {
