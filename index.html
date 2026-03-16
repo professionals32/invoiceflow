@@ -967,7 +967,9 @@
     btn.textContent = 'Signing in...';
     btn.disabled = true;
     try {
-      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Request timed out. Check your internet connection.')), 8000));
+      const loginPromise = sb.auth.signInWithPassword({ email, password });
+      const { data, error } = await Promise.race([loginPromise, timeout]);
       if (error) {
         errEl.textContent = error.message;
         errEl.style.display = 'block';
@@ -978,7 +980,7 @@
         setTimeout(() => { closeModal('authModal'); window.location.reload(); }, 800);
       }
     } catch(e) {
-      errEl.textContent = 'Something went wrong: ' + e.message;
+      errEl.textContent = 'Error: ' + e.message;
       errEl.style.display = 'block';
       btn.textContent = 'Sign In';
       btn.disabled = false;
